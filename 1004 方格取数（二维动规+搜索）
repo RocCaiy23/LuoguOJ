@@ -1,0 +1,120 @@
+#include <iostream>
+#include <fstream>
+#include <cstdio>
+#include <algorithm>  
+#include <stack>  
+
+using namespace std;
+#define N 11
+
+struct point 
+{
+	int i, j;
+	int value;
+	point(int i, int j, int value) 
+	{
+		this->i = i, this->j = j, this->value = value;
+	}
+};
+
+stack<point> step, situation;
+int map[N][N], dp[N][N], dptmp[N][N];
+int flag;
+void destroy(int i, int j);
+void dp_start(int n);
+void dp_search(int n);
+void dp_copy(int n);
+void dp_Initialization();
+
+int main()
+{
+	int n, i, j, aij;
+	cin >> n;
+	while(1)
+	{
+		cin >> i >> j >> aij;
+		if (i == 0)
+			break;
+		map[i][j] = aij;
+	}
+	int result = 0;
+	dp_start(n);
+	dp_search(n);
+	result += dp[n][n];
+	int tmp=-1;
+	dp_copy(n);
+	while (!situation.empty())
+	{
+		flag = result;
+		for (int i = 0; i < n + 1; i++)
+			for (int j = 0; j < n + 1; j++)
+				dp[i][j] = dptmp[i][j];
+		point p1 = situation.top();
+		situation.pop();
+		destroy(p1.i, p1.j);
+		dp_Initialization();
+		dp_start(n);
+		tmp=max(tmp,dp[n][n]);
+		while (!step.empty())
+		{
+			point p2 = step.top();
+			step.pop();
+			map[p2.i][p2.j] = p2.value;
+		}
+	}
+	result += tmp;
+	cout << result;
+	return 0;
+}
+
+void destroy(int i, int j)
+{
+	step.push(point(i, j, map[i][j]));
+	flag -= map[i][j];
+	map[i][j] = 0;
+f1:
+	while (flag != 0) 
+	{
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < N; j++)
+				if (dp[i][j] == flag)
+				{
+					step.push(point(i, j, map[i][j]));
+					flag -= map[i][j];
+					map[i][j] = 0;
+					goto f1;
+				}
+	}
+}
+
+void dp_start(int n)
+{
+	for (int i = 1; i < n + 1; i++)
+		for (int j = 1; j < n + 1; j++)
+			if (map[i][j] == 0)
+				dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+			else
+				dp[i][j] += map[i][j] + max(dp[i - 1][j], dp[i][j - 1]);
+}
+
+void dp_search(int n)
+{
+	for (int i = 1; i < n + 1; i++)
+		for (int j = 1; j < n + 1; j++)
+			if (dp[i - 1][j] != dp[i][j] && dp[i][j - 1] != dp[i][j] && dp[i][j]==dp[n][n])
+				situation.push(point(i,j,map[i][j]));
+}
+
+void dp_copy(int n)
+{
+	for (int i = 0; i < N; i++)
+		for (int j = 0; j < N; j++)
+			dptmp[i][j] = dp[i][j];
+}
+
+void dp_Initialization()
+{
+	for (int i = 0; i < N; i++)
+		for (int j = 0; j < N; j++)
+			dp[i][j] = 0;
+}
